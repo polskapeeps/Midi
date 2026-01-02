@@ -1,5 +1,4 @@
 # Core Audio Processing
-basic-pitch>=0.3.0        # Spotify's ML pitch detector
 librosa>=0.10.0           # Audio analysis and feature extraction
 soundfile>=0.12.0         # Audio file I/O (used by librosa)
 audioread>=3.0.0          # Backend for librosa
@@ -14,6 +13,9 @@ scipy>=1.10.0             # Signal processing
 
 # Visualization
 matplotlib>=3.7.0         # Plotting (waveforms, piano roll)
+
+# Optional: Basic Pitch (requires TensorFlow and Python < 3.12)
+basic-pitch>=0.3.0; python_version < "3.12"  # Spotify's ML pitch detector (best results)
 
 # GUI (PyQt6 - install when ready for GUI phase)
 # PyQt6>=6.6.0            # Desktop GUI framework

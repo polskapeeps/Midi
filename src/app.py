@@ -20,7 +20,7 @@ class AudioToMidiApp:
 
     def __init__(
         self,
-        algorithm: str = "basic-pitch",
+        algorithm: str = "pyin",
         tempo: int = 120,
         min_confidence: float = 0.3,
         min_duration: float = 0.05
@@ -120,7 +120,12 @@ class AudioToMidiApp:
         if quantize:
             if verbose:
                 print("⏱️  Quantizing note timings...")
-            filtered_notes = self.detector.quantize_timing(filtered_notes)
+            filtered_notes = self.detector.quantize_timing(
+                filtered_notes,
+                tempo=self.exporter.tempo,
+                subdivision=4,
+                strength=0.9,
+            )
             if verbose:
                 print("   ✓ Notes quantized to grid")
                 print()
@@ -185,9 +190,9 @@ Supported audio formats:
 
     parser.add_argument(
         '-a', '--algorithm',
-        choices=['basic-pitch', 'crepe', 'pyin'],
-        default='basic-pitch',
-        help='Pitch detection algorithm (default: basic-pitch)'
+        choices=['basic-pitch', 'pyin'],
+        default='pyin',
+        help='Pitch detection algorithm (default: pyin; basic-pitch recommended on Python 3.11)'
     )
 
     parser.add_argument(

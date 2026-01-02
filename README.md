@@ -14,11 +14,13 @@ This application focuses on converting **already-separated audio stems** (bass, 
 ## Features
 
 - **Load audio stems** (WAV, MP3, FLAC)
-- **Pitch detection** using state-of-the-art ML models (Basic Pitch)
-- **Waveform visualization** to see what you're processing
-- **Piano roll display** with detected notes
-- **MIDI editing** to fix any detection errors
+- **Pitch detection**
+  - ✅ **pYIN (librosa)** monophonic tracker (default, works on Python 3.12+)
+  - ✅ **Basic Pitch** support (best quality, requires Python 3.11 + TensorFlow)
+- **Tempo-aware quantization** to tighten detected notes
 - **Export to MIDI** (.mid files for any DAW)
+
+Planned next (from DESIGN.md): waveform/piano-roll visualization and in-app MIDI editing.
 
 ## Quick Start
 
@@ -32,21 +34,27 @@ git clone <repository-url>
 cd Midi
 
 # Create virtual environment
-python3.11 -m venv venv
+python3 -m venv venv
 source venv/bin/activate  # or venv\Scripts\activate on Windows
 
-# Install dependencies
+# Install dependencies (pyin pipeline)
 pip install -r requirements.txt
+
+# Optional: install Basic Pitch for higher accuracy (requires Python 3.11)
+# pip install basic-pitch
 ```
 
 ### Basic Usage
 
 ```bash
-# CLI version (coming soon)
+# Convert a stem using the default pYIN pipeline
 python src/app.py path/to/stem.wav
 
-# GUI version (coming soon)
-python src/app.py --gui
+# Run with Basic Pitch (requires Python 3.11 + TensorFlow)
+python src/app.py path/to/stem.wav --algorithm basic-pitch
+
+# Enable quantization and custom tempo
+python src/app.py path/to/stem.wav --quantize --tempo 140
 ```
 
 ## Project Status
@@ -55,17 +63,17 @@ python src/app.py --gui
 
 - [x] Design document completed
 - [x] Project structure created
-- [ ] Core audio processing pipeline
-- [ ] CLI interface
+- [x] Core audio processing pipeline (pYIN + Basic Pitch optional)
+- [x] CLI interface with quantization
 - [ ] GUI application (PyQt6)
 - [ ] MIDI editing tools
 - [ ] Package for distribution
 
 ## Technology
 
-- **Python 3.11+**
+- **Python 3.11+** (pYIN works on 3.12; Basic Pitch requires 3.11)
 - **Basic Pitch** (Spotify's ML pitch detector)
-- **librosa** (audio analysis)
+- **librosa** (audio analysis / pYIN)
 - **mido** (MIDI creation)
 - **PyQt6** (desktop GUI)
 
