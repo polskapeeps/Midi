@@ -1,0 +1,39 @@
+# Core Audio Processing
+basic-pitch>=0.3.0        # Spotify's ML pitch detector
+librosa>=0.10.0           # Audio analysis and feature extraction
+soundfile>=0.12.0         # Audio file I/O (used by librosa)
+audioread>=3.0.0          # Backend for librosa
+
+# MIDI Handling
+mido>=1.3.0               # MIDI file creation and manipulation
+python-rtmidi>=1.5.0      # Real-time MIDI I/O (optional, for future features)
+
+# Scientific Computing
+numpy>=1.24.0             # Numerical operations
+scipy>=1.10.0             # Signal processing
+
+# Visualization
+matplotlib>=3.7.0         # Plotting (waveforms, piano roll)
+
+# GUI (PyQt6 - install when ready for GUI phase)
+# PyQt6>=6.6.0            # Desktop GUI framework
+# pyqtgraph>=0.13.0       # Fast plotting for real-time displays
+
+# Alternative: Web UI dependencies (uncomment if choosing web route)
+# fastapi>=0.109.0        # API framework
+# uvicorn>=0.27.0         # ASGI server
+# python-multipart>=0.0.6 # File upload handling
+
+# Development Tools (optional)
+# pytest>=8.0.0           # Testing framework
+# black>=24.0.0           # Code formatting
+# flake8>=7.0.0           # Linting
+# mypy>=1.8.0             # Type checking
+
+# Optional: Alternative pitch detection algorithms (add later if needed)
+# crepe>=0.0.13           # Alternative monophonic pitch detector
+# pyin>=0.3.0             # Probabilistic YIN algorithm
+
+# Optional: Enhanced audio processing (add if needed)
+# essentia>=2.1b6         # Additional audio analysis
+# aubio>=0.4.9            # Alternative onset/pitch detection
