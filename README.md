@@ -34,10 +34,10 @@ git clone <repository-url>
 cd Midi
 
 # Create virtual environment
-python3 -m venv venv
-source venv/bin/activate  # or venv\Scripts\activate on Windows
+python -m venv .venv
+source .venv/bin/activate  # or .venv\Scripts\activate on Windows
 
-# Install dependencies (pyin pipeline)
+# Install dependencies (pyin pipeline, works on Python 3.12+)
 pip install -r requirements.txt
 
 # Optional: install Basic Pitch for higher accuracy (requires Python 3.11)
@@ -71,7 +71,7 @@ python src/app.py path/to/stem.wav --quantize --tempo 140
 
 ## Technology
 
-- **Python 3.11+** (pYIN works on 3.12; Basic Pitch requires 3.11)
+- **Python**: pYIN works on 3.12+; Basic Pitch requires 3.11
 - **Basic Pitch** (Spotify's ML pitch detector)
 - **librosa** (audio analysis / pYIN)
 - **mido** (MIDI creation)

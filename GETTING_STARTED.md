@@ -156,34 +156,40 @@ Here's the step-by-step plan:
 
 ```bash
 # Create virtual environment
-python3.11 -m venv venv
+python -m venv .venv
 
 # Activate it
-source venv/bin/activate  # macOS/Linux
-venv\Scripts\activate     # Windows
+source .venv/bin/activate  # macOS/Linux
+.venv\Scripts\activate     # Windows
 
 # Upgrade pip
 pip install --upgrade pip
 ```
 
+Notes:
+- Use Python 3.11 if you need Basic Pitch.
+- For pYIN only, Python 3.12+ is fine.
+- On Windows with multiple versions: `py -3.11 -m venv .venv`
+
 ### Step 2: Install Core Dependencies
 
 ```bash
-# Install minimal dependencies first
-pip install basic-pitch librosa mido numpy matplotlib
+# Install core dependencies (pYIN pipeline)
+pip install -r requirements.txt
 
-# Test basic-pitch works
-basic-pitch --help
+# Optional: Basic Pitch (Python 3.11 only)
+# pip install basic-pitch
 ```
 
 ### Step 3: Test with Real Audio
 
 ```bash
 # Download a test stem or use your own
-# Run Basic Pitch CLI to verify it works
-basic-pitch output/ path/to/your/stem.wav
+# Run the app with pYIN (works on Python 3.12+)
+python src/app.py path/to/your/stem.wav --algorithm pyin
 
-# Check output folder for MIDI file
+# If using Python 3.11 with Basic Pitch installed
+# python src/app.py path/to/your/stem.wav --algorithm basic-pitch
 ```
 
 **If this works**, you've validated the core technology! Everything else is UI/UX.

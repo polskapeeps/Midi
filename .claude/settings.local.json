@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(powershell -Command \"Remove-Item -Recurse -Force venv\")",
+      "Bash(.venv/Scripts/python.exe:*)"
+    ]
+  }
+}
