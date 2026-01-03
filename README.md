@@ -64,6 +64,21 @@ python src/app.py path/to/drums.wav --algorithm drums --quantize
 python src/app.py path/to/stem.wav --quantize --tempo 140
 ```
 
+### GUI Preview (PyQt6)
+
+The first-pass GUI wraps the existing CLI pipeline. Launch it after installing
+PyQt6:
+
+```bash
+pip install -r requirements.txt  # ensure PyQt6 is available
+python -m ui.main_window
+```
+
+Use the controls to select an input stem, optionally adjust algorithm/tempo/
+thresholds, and start the conversion without leaving the app. The layout is
+kept simple so we can iterate on optional features (visualization, batch
+queues, MIDI editing) in future updates.
+
 ## Project Status
 
 🚧 **In Development** - See [DESIGN.md](DESIGN.md) for full design concept
@@ -72,7 +87,7 @@ python src/app.py path/to/stem.wav --quantize --tempo 140
 - [x] Project structure created
 - [x] Core audio processing pipeline (pYIN + Basic Pitch optional)
 - [x] CLI interface with quantization
-- [ ] GUI application (PyQt6)
+- [ ] GUI application (PyQt6) — initial layout implemented for preview
 - [ ] MIDI editing tools
 - [ ] Package for distribution
 
