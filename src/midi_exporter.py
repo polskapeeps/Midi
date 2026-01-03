@@ -35,7 +35,9 @@ class MidiExporter:
         self,
         notes: List[dict],
         output_path: str,
-        track_name: str = "Converted Audio"
+        track_name: str = "Converted Audio",
+        channel: int = 0,
+        program: Optional[int] = None,
     ) -> str:
         """
         Export notes to MIDI file.
@@ -63,8 +65,10 @@ class MidiExporter:
         tempo_microseconds = mido.bpm2tempo(self.tempo)
         track.append(MetaMessage('set_tempo', tempo=tempo_microseconds, time=0))
 
-        # Add program change (instrument)
-        track.append(Message('program_change', program=self.program, time=0))
+        # Add program change (instrument) if provided
+        program_value = self.program if program is None else program
+        if program_value is not None:
+            track.append(Message('program_change', program=program_value, time=0, channel=channel))
 
         # Sort notes by start time
         sorted_notes = sorted(notes, key=lambda n: n['start_time'])
@@ -103,14 +107,16 @@ class MidiExporter:
                     'note_on',
                     note=event['pitch'],
                     velocity=event['velocity'],
-                    time=delta_ticks
+                    time=delta_ticks,
+                    channel=channel,
                 ))
             elif event['type'] == 'note_off':
                 track.append(Message(
                     'note_off',
                     note=event['pitch'],
                     velocity=0,
-                    time=delta_ticks
+                    time=delta_ticks,
+                    channel=channel,
                 ))
 
             current_time = absolute_time

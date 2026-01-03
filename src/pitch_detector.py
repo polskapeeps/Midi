@@ -7,6 +7,12 @@ from typing import Tuple, List
 class PitchDetector:
     """Handles pitch detection using various algorithms."""
 
+    DRUM_MIDI_MAP = {
+        "kick": 36,   # C1
+        "snare": 38,  # D1
+        "hat": 42,    # F#1 (closed hat)
+    }
+
     def __init__(self, algorithm: str = "pyin", lazy_init: bool = False):
         """
         Initialize pitch detector.
@@ -20,7 +26,7 @@ class PitchDetector:
         self._predict_func = None
         self._initialized = False
 
-        if self.algorithm not in {"basic-pitch", "pyin"}:
+        if self.algorithm not in {"basic-pitch", "pyin", "drums"}:
             raise ValueError(f"Unknown algorithm: {algorithm}")
 
         if not lazy_init:
@@ -35,6 +41,8 @@ class PitchDetector:
             self._init_basic_pitch()
         elif self.algorithm == "pyin":
             self._init_pyin()
+        elif self.algorithm == "drums":
+            self._init_drums()
 
         self._initialized = True
 
@@ -66,6 +74,21 @@ class PitchDetector:
             "fmax": "C7",
         }
 
+    def _init_drums(self):
+        """Initialize drum detection configuration (librosa-based)."""
+        try:
+            import librosa  # noqa: F401
+        except ImportError:
+            raise ImportError("librosa is required for the drums algorithm. Install via pip install librosa")
+
+        self.model = "drums"
+        self._drums_config = {
+            "sr": 22050,
+            "hop_length": 512,
+            "n_fft": 2048,
+            "min_duration": 0.08,
+        }
+
     def detect(self, audio_path: str) -> Tuple[np.ndarray, List[dict], dict]:
         """
         Detect pitches from audio file.
@@ -86,6 +109,8 @@ class PitchDetector:
             return self._detect_basic_pitch(audio_path)
         if self.algorithm == "pyin":
             return self._detect_pyin(audio_path)
+        if self.algorithm == "drums":
+            return self._detect_drums(audio_path)
 
         raise NotImplementedError(f"{self.algorithm} not yet implemented")
 
@@ -197,6 +222,94 @@ class PitchDetector:
 
         return np.array(f0), notes, metadata
 
+    def _detect_drums(self, audio_path: str) -> Tuple:
+        """
+        Detect drum hits using onset detection and band energy heuristics.
+
+        Returns:
+            Tuple of (model_output, note_events, metadata)
+        """
+        import librosa
+
+        sr = self._drums_config["sr"]
+        hop_length = self._drums_config["hop_length"]
+        n_fft = self._drums_config["n_fft"]
+        min_duration = self._drums_config["min_duration"]
+
+        audio, _ = librosa.load(audio_path, sr=sr, mono=True)
+
+        onset_env = librosa.onset.onset_strength(y=audio, sr=sr, hop_length=hop_length)
+        onset_frames = self._pick_onsets(onset_env, sr=sr, hop_length=hop_length)
+
+        if len(onset_frames) == 0:
+            metadata = {
+                "algorithm": "drums",
+                "num_notes": 0,
+                "duration": 0,
+                "pitch_range": (0, 0),
+            }
+            return onset_env, [], metadata
+
+        spectrum = np.abs(librosa.stft(audio, n_fft=n_fft, hop_length=hop_length))
+        freqs = librosa.fft_frequencies(sr=sr, n_fft=n_fft)
+
+        kick_band = (20, 120)
+        snare_band = (120, 2500)
+        hat_band = (2500, 10000)
+
+        kick_idx = np.where((freqs >= kick_band[0]) & (freqs < kick_band[1]))[0]
+        snare_idx = np.where((freqs >= snare_band[0]) & (freqs < snare_band[1]))[0]
+        hat_idx = np.where((freqs >= hat_band[0]) & (freqs < hat_band[1]))[0]
+
+        max_onset = float(np.max(onset_env)) if len(onset_env) else 1.0
+
+        notes = []
+        for frame in onset_frames:
+            if frame >= spectrum.shape[1]:
+                continue
+
+            mag = spectrum[:, frame]
+            total = float(np.sum(mag))
+            if total <= 0:
+                continue
+
+            kick_energy = float(np.sum(mag[kick_idx]))
+            snare_energy = float(np.sum(mag[snare_idx]))
+            hat_energy = float(np.sum(mag[hat_idx]))
+
+            energies = {
+                "kick": kick_energy,
+                "snare": snare_energy,
+                "hat": hat_energy,
+            }
+            label = max(energies, key=energies.get)
+
+            onset_time = float(librosa.frames_to_time(frame, sr=sr, hop_length=hop_length))
+            velocity = float(min(1.0, max(0.0, onset_env[frame] / max_onset)))
+
+            notes.append({
+                "start_time": onset_time,
+                "end_time": onset_time + min_duration,
+                "duration": min_duration,
+                "pitch": self.DRUM_MIDI_MAP[label],
+                "velocity": velocity,
+                "note_name": label,
+                "confidence": velocity,
+                "pitch_bends": [],
+            })
+
+        metadata = {
+            "algorithm": "drums",
+            "num_notes": len(notes),
+            "duration": max((n["end_time"] for n in notes), default=0),
+            "pitch_range": (
+                min((n["pitch"] for n in notes), default=0),
+                max((n["pitch"] for n in notes), default=0),
+            ),
+        }
+
+        return onset_env, notes, metadata
+
     def _close_note(self, current_note: dict, end_time: float, frame_duration: float, notes: List[dict]):
         """Finalize a note and append to the notes list."""
         duration = max(frame_duration, end_time - current_note["start_time"])
@@ -212,6 +325,26 @@ class PitchDetector:
             "confidence": confidence,
             "pitch_bends": [],
         })
+
+    @staticmethod
+    def _pick_onsets(onset_env: np.ndarray, sr: int, hop_length: int) -> np.ndarray:
+        """Pick onset frames using a simple peak-picking heuristic."""
+        if onset_env.size < 3:
+            return np.array([], dtype=int)
+
+        threshold = float(np.median(onset_env) + 0.5 * np.std(onset_env))
+        min_interval = max(1, int(0.05 * sr / hop_length))
+
+        peaks = []
+        for i in range(1, len(onset_env) - 1):
+            if onset_env[i] < threshold:
+                continue
+            if onset_env[i] >= onset_env[i - 1] and onset_env[i] >= onset_env[i + 1]:
+                if peaks and (i - peaks[-1]) < min_interval:
+                    continue
+                peaks.append(i)
+
+        return np.array(peaks, dtype=int)
 
     @staticmethod
     def _midi_to_note_name(midi_pitch: int) -> str:

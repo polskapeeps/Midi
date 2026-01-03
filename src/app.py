@@ -69,7 +69,7 @@ class AudioToMidiApp:
             output_path = input_path.with_suffix('.mid')
 
         if verbose:
-            print(f"🎵 Audio to MIDI Conversion")
+            print("Audio to MIDI Conversion")
             print(f"{'='*50}")
             print(f"Input:  {input_path}")
             print(f"Output: {output_path}")
@@ -77,33 +77,33 @@ class AudioToMidiApp:
 
         # Step 1: Load audio
         if verbose:
-            print("📂 Loading audio file...")
+            print("Loading audio file...")
 
         audio, sr = self.loader.load(str(input_path))
         duration = self.loader.get_duration(audio, sr)
 
         if verbose:
-            print(f"   ✓ Loaded {duration:.2f} seconds at {sr} Hz")
+            print(f"   OK Loaded {duration:.2f} seconds at {sr} Hz")
             print()
 
         # Step 2: Detect pitches
         if verbose:
-            print("🎼 Detecting notes (this may take 10-30 seconds)...")
+            print("Detecting notes (this may take 10-30 seconds)...")
 
         model_output, notes, metadata = self.detector.detect(str(input_path))
 
         if verbose:
-            print(f"   ✓ Found {len(notes)} raw notes")
+            print(f"   OK Found {len(notes)} raw notes")
             if notes:
                 pitch_min, pitch_max = metadata['pitch_range']
-                print(f"   ✓ Pitch range: {self.detector._midi_to_note_name(pitch_min)} "
+                print(f"   OK Pitch range: {self.detector._midi_to_note_name(pitch_min)} "
                       f"to {self.detector._midi_to_note_name(pitch_max)}")
             print()
 
         # Step 3: Filter notes
         if verbose:
-            print(f"🔍 Filtering notes (confidence ≥ {self.min_confidence}, "
-                  f"duration ≥ {self.min_duration}s)...")
+            print(f"Filtering notes (confidence >= {self.min_confidence}, "
+                  f"duration >= {self.min_duration}s)...")
 
         filtered_notes = self.detector.filter_notes(
             notes,
@@ -113,13 +113,13 @@ class AudioToMidiApp:
 
         if verbose:
             removed = len(notes) - len(filtered_notes)
-            print(f"   ✓ Kept {len(filtered_notes)} notes (removed {removed})")
+            print(f"   OK Kept {len(filtered_notes)} notes (removed {removed})")
             print()
 
         # Step 4: Quantize if requested
         if quantize:
             if verbose:
-                print("⏱️  Quantizing note timings...")
+                print("Quantizing note timings...")
             filtered_notes = self.detector.quantize_timing(
                 filtered_notes,
                 tempo=self.exporter.tempo,
@@ -127,32 +127,36 @@ class AudioToMidiApp:
                 strength=0.9,
             )
             if verbose:
-                print("   ✓ Notes quantized to grid")
+                print("   OK Notes quantized to grid")
                 print()
 
         # Step 5: Export MIDI
         if verbose:
-            print("💾 Exporting MIDI file...")
+            print("Exporting MIDI file...")
 
         if not filtered_notes:
-            print("   ⚠️  Warning: No notes to export!")
+            print("   WARNING: No notes to export!")
             return None
 
         track_name = input_path.stem
+        channel = 9 if self.detector.algorithm == "drums" else 0
+        program = None if self.detector.algorithm == "drums" else self.exporter.program
         output_file = self.exporter.export(
             filtered_notes,
             str(output_path),
-            track_name=track_name
+            track_name=track_name,
+            channel=channel,
+            program=program,
         )
 
         if verbose:
-            print(f"   ✓ Saved: {output_file}")
+            print(f"   OK Saved: {output_file}")
             print()
-            print("✅ Conversion complete!")
-            print(f"\n📊 Summary:")
-            print(f"   • Input duration: {duration:.2f}s")
-            print(f"   • Notes exported: {len(filtered_notes)}")
-            print(f"   • Algorithm: {metadata['algorithm']}")
+            print("Conversion complete!")
+            print("\nSummary:")
+            print(f"   - Input duration: {duration:.2f}s")
+            print(f"   - Notes exported: {len(filtered_notes)}")
+            print(f"   - Algorithm: {metadata['algorithm']}")
 
         return output_file
 
@@ -190,9 +194,9 @@ Supported audio formats:
 
     parser.add_argument(
         '-a', '--algorithm',
-        choices=['basic-pitch', 'pyin'],
+        choices=['basic-pitch', 'pyin', 'drums'],
         default='pyin',
-        help='Pitch detection algorithm (default: pyin; basic-pitch recommended on Python 3.11)'
+        help='Algorithm (pyin for melodic, drums for drum hits; basic-pitch on Python 3.11)'
     )
 
     parser.add_argument(
@@ -253,16 +257,16 @@ Supported audio formats:
             sys.exit(1)
 
     except FileNotFoundError as e:
-        print(f"❌ Error: {e}", file=sys.stderr)
+        print(f"Error: {e}", file=sys.stderr)
         sys.exit(1)
     except ValueError as e:
-        print(f"❌ Error: {e}", file=sys.stderr)
+        print(f"Error: {e}", file=sys.stderr)
         sys.exit(1)
     except KeyboardInterrupt:
-        print("\n⚠️  Interrupted by user")
+        print("\nInterrupted by user")
         sys.exit(130)
     except Exception as e:
-        print(f"❌ Unexpected error: {e}", file=sys.stderr)
+        print(f"Unexpected error: {e}", file=sys.stderr)
         import traceback
         traceback.print_exc()
         sys.exit(1)

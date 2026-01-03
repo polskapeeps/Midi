@@ -188,6 +188,9 @@ pip install -r requirements.txt
 # Run the app with pYIN (works on Python 3.12+)
 python src/app.py path/to/your/stem.wav --algorithm pyin
 
+# Drum MIDI from a drum stem (kick/snare/hat)
+python src/app.py path/to/drums.wav --algorithm drums --quantize
+
 # If using Python 3.11 with Basic Pitch installed
 # python src/app.py path/to/your/stem.wav --algorithm basic-pitch
 ```

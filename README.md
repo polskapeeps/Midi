@@ -17,8 +17,11 @@ This application focuses on converting **already-separated audio stems** (bass, 
 - **Pitch detection**
   - ✅ **pYIN (librosa)** monophonic tracker (default, works on Python 3.12+)
   - ✅ **Basic Pitch** support (best quality, requires Python 3.11 + TensorFlow)
+  - ?o. **Drums** onset-based detection for kick/snare/hat (fast heuristic)
 - **Tempo-aware quantization** to tighten detected notes
 - **Export to MIDI** (.mid files for any DAW)
+
+Note: Drum detection is heuristic and works best on isolated drum stems.
 
 Planned next (from DESIGN.md): waveform/piano-roll visualization and in-app MIDI editing.
 
@@ -52,6 +55,10 @@ python src/app.py path/to/stem.wav
 
 # Run with Basic Pitch (requires Python 3.11 + TensorFlow)
 python src/app.py path/to/stem.wav --algorithm basic-pitch
+
+# Quick drum MIDI (kick/snare/hat) from a drum stem
+python src/app.py path/to/drums.wav --algorithm drums --quantize
+# Output uses GM drum channel (10)
 
 # Enable quantization and custom tempo
 python src/app.py path/to/stem.wav --quantize --tempo 140
