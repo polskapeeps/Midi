@@ -197,6 +197,19 @@ python src/app.py path/to/drums.wav --algorithm drums --quantize
 
 **If this works**, you've validated the core technology! Everything else is UI/UX.
 
+### Step 4: Try the GUI Preview
+
+Once PyQt6 is installed (it is listed in `requirements.txt`), you can launch the
+initial GUI layout to run the same pipeline without the command line:
+
+```bash
+python -m ui.main_window
+```
+
+The preview keeps configuration minimal—file pickers, algorithm/tempo settings,
+and a log panel—so we can add optional features like waveform plots, MIDI
+editing, and batch queues iteratively.
+
 ---
 
 ## Project Structure
